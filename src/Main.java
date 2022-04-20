@@ -2,29 +2,34 @@ import java.io.File;
 
 public class Main {
     public static void main(String[] args) {
+        final File dirSaveGame = new File("C:\\Games\\saveGames");
         GameProgress[] gameProgress = {
                 new GameProgress(100, 11, 80, 50),
                 new GameProgress(80, 15, 50, 30),
                 new GameProgress(50, 3, 30, 20)
         };
-
-        File saveGamePath = new File("C:\\Games\\saveGames");
-
-        if (saveGamePath.exists()) {
+        if (dirSaveGame.exists()) {
             for (int i = 0; i < gameProgress.length; i++) {
-                if (saveGame(saveGamePath.getPath() + "\\save" + (i + 1) + ".dat",
+                if (saveGame(dirSaveGame + "\\save" + (i + 1) + ".dat",
                         gameProgress[i])) {
                     System.out.printf("Успешное сохранение в файл save%d.dat%n", i + 1);
                 } else {
                     System.out.printf("Не удалось сохранить в файл save%d.dat%n", i + 1);
                 }
-
             }
-            if (zipFiles(saveGamePath.getPath() + "\\save.zip",
-                    saveGamePath.listFiles())) {
-                System.out.println("Успешно запаковано в архив save.zip");
+            File[] listFiles = dirSaveGame.listFiles();
+            if (listFiles != null
+                    && zipFiles(dirSaveGame + "\\save.zip", listFiles)) {
+                System.out.println("Файлы сохранения архивированы в файл save.zip");
+                for (File file : listFiles) {
+                    if (file.delete()) {
+                        System.out.println("Удалён файл " + file.getName());
+                    } else {
+                        System.out.println("Не удалось удалить файл " + file.getName());
+                    }
+                }
             } else {
-                System.out.println("Не удалось архивировать файлы сохранения");
+                System.out.println("Файлы сохранения не архивированы");
             }
         } else {
             System.out.println("Папки saveGames не существует");
@@ -33,12 +38,12 @@ public class Main {
 
     }
 
-    public static boolean saveGame(String filePathName, GameProgress gameProgress) {
+    public static boolean saveGame(String filePath, GameProgress gameProgress) {
         //TODO saveGame()
         return false;
     }
 
-    public static boolean zipFiles(String zipPathName, File[] files) {
+    public static boolean zipFiles(String zipPath, File[] files) {
         //TODO zipFiles()
         return false;
     }
