@@ -1,6 +1,4 @@
 import java.io.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 public class Main {
     public static void main(String[] args) {
@@ -10,19 +8,19 @@ public class Main {
                 new GameProgress(80, 15, 50, 30),
                 new GameProgress(50, 3, 30, 20)
         };
+        File zipFile = new File(dirSaveGame, "save.zip");
         if (dirSaveGame.exists()) {
             for (int i = 0; i < gameProgress.length; i++) {
-                if (saveGame(dirSaveGame + "\\save" + (i + 1) + ".dat",
+                if (Serialization.saveGame(dirSaveGame + "\\save" + (i + 1) + ".dat",
                         gameProgress[i])) {
                     System.out.printf("Успешное сохранение в файл save%d.dat%n", i + 1);
                 } else {
                     System.out.printf("Не удалось сохранить в файл save%d.dat%n", i + 1);
                 }
             }
-            File[] listFiles = dirSaveGame.listFiles();
-            if (listFiles != null
-                    && zipFiles(dirSaveGame + "\\save.zip", listFiles)) {
-                System.out.println("Файлы сохранения архивированы в файл save.zip");
+            File[] listFiles = getSaveFiles(dirSaveGame);
+            if (listFiles != null && Zip.zipFiles(zipFile, listFiles)) {
+                System.out.println("Файлы сохранения архивированы в файл " + zipFile.getName());
                 for (File file : listFiles) {
                     if (file.delete()) {
                         System.out.println("Удалён файл " + file.getName());
@@ -36,37 +34,20 @@ public class Main {
         } else {
             System.out.println("Папки saveGames не существует");
         }
-
-
-    }
-
-    public static boolean saveGame(String filePath, GameProgress gameProgress) {
-        try (FileOutputStream fos = new FileOutputStream(filePath);
-             ObjectOutputStream oos = new ObjectOutputStream(fos)) {
-            oos.writeObject(gameProgress);
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    public static boolean zipFiles(String zipPath, File[] files) {
-        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipPath))) {
-            for (File file : files) {
-                FileInputStream fis = new FileInputStream(file);
-                ZipEntry entry = new ZipEntry(file.getName());
-                zos.putNextEntry(entry);
-                byte[] buffer = new byte[fis.available()];
-                fis.read(buffer);
-                zos.write(buffer);
-                zos.closeEntry();
-                fis.close();
+        if (Zip.openZip(zipFile, dirSaveGame.getPath())) {
+            System.out.println("Архив " + zipFile.getName() + " успешно распакован в директорию " + dirSaveGame);
+            File[] listFile = getSaveFiles(dirSaveGame);
+            if (listFile != null) {
+                System.out.println("Состояния сохранённых игр");
+                for (File file : listFile) {
+                    GameProgress gp = Serialization.openProgress(file);
+                    System.out.println(gp);
+                }
             }
-            return true;
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
         }
-        return false;
+    }
+
+    private static File[] getSaveFiles(File dirSaveGame) {
+        return dirSaveGame.listFiles(x -> !x.getName().endsWith(".zip"));
     }
 }
