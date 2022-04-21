@@ -1,4 +1,6 @@
-import java.io.File;
+import java.io.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class Main {
     public static void main(String[] args) {
@@ -39,12 +41,32 @@ public class Main {
     }
 
     public static boolean saveGame(String filePath, GameProgress gameProgress) {
-        //TODO saveGame()
+        try (FileOutputStream fos = new FileOutputStream(filePath);
+             ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+            oos.writeObject(gameProgress);
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return false;
     }
 
     public static boolean zipFiles(String zipPath, File[] files) {
-        //TODO zipFiles()
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipPath))) {
+            for (File file : files) {
+                FileInputStream fis = new FileInputStream(file);
+                ZipEntry entry = new ZipEntry(file.getName());
+                zos.putNextEntry(entry);
+                byte[] buffer = new byte[fis.available()];
+                fis.read(buffer);
+                zos.write(buffer);
+                zos.closeEntry();
+                fis.close();
+            }
+            return true;
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
         return false;
     }
 }
